@@ -24,6 +24,7 @@
 - Tests mirror `lib/`. Public and private functions are separated by `## PRIVATE FUNCTIONS`. No single letter or abbreviated variable names, even in math (`weights`, not `w`). No em dashes or dashes in prose.
 - Library code never names `EXLA` at compile time. `Interpretability.Compiler.options/0` picks EXLA when it is loaded, so the deck can depend on this project without EXLA.
 - Every builder decision goes in `docs/decisions.md` with its reason, in the task where it is made.
+- **Half teaching, half building.** The speaker is learning these concepts during the build and the audience is software engineers without a statistics background. Before each task that introduces a concept (superposition, labels as ground truth, MLP neurons, precision and recall, SAEs), explain it in plain terms with a concrete example from this grammar and check understanding before writing code. Prefer intuition over statistics.
 - **Speaker checkpoints:** a step marked **SPEAKER** stops the run. Ask the speaker for a prediction, record it in `docs/findings.md`, and only then run the experiment. Afterwards write the result next to the prediction, with a two or three sentence explanation the speaker could say out loud.
 
 ## Review Focus
@@ -53,7 +54,7 @@
 - [ ] **Step 3:** Write a test that jits `fn tensor -> Nx.multiply(tensor, 2) end` with `Compiler.options()` and asserts that the result for `Nx.tensor([1.0, 2.0])` is `[2.0, 4.0]`.
 - [ ] **Step 4:** Run `mix deps.get && mix test`. Expected: PASS, with EXLA compiling. **If EXLA fails to build, do not debug it.** Remove it, rerun on BinaryBackend, and record the failure in `decisions.md`.
 - [ ] **Step 5:** Write `CLAUDE.md`. It relaxes zero deps and hand written backprop. It keeps seeded reproducibility, moduledocs as talk material, tests mirroring `lib/`, and clarity over performance. It points to the spec and this plan.
-- [ ] **Step 6:** Seed `hard-questions.md` with the spec's questions, plus "Why an SAE instead of PCA?" if the speaker agrees to restore it. Answers start as "pending a result". Seed `decisions.md` with "Nx.Defn and Polaris instead of Axon: steering and SAE splicing need to replace the MLP hidden activations mid forward pass, which is one function argument in defn and a hook in Axon."
+- [ ] **Step 6:** Seed `hard-questions.md` with the spec's questions. There is no PCA question, because the audience has no statistics background. Answers start as "pending a result". Seed `decisions.md` with "Nx.Defn and Polaris instead of Axon: steering and SAE splicing need to replace the MLP hidden activations mid forward pass, which is one function argument in defn and a hook in Axon."
 - [ ] **Step 7:** Commit with the message "Scaffold the interpretability project so sequel code stays out of the zero dependency original".
 
 ### Task 2: Toy model of superposition
