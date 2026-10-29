@@ -302,6 +302,22 @@ Probabilities are pinned here and recorded in `decisions.md`:
 - [ ] **Step 5:** Explain the result to the speaker. If the neurons are mostly clean, that is the finding the spec plans for. Write it up in `findings.md`, and do not tune anything to make the neurons messy.
 - [ ] **Step 6:** Commit with the message "Measure how clean the raw neurons are, using the same yardstick the SAE will face".
 
+### Amendment (2026-10-29): the Goodfire comparison
+
+After Task 10 found 0 of 128 neurons monosemantic, the speaker approved two
+additions prompted by Goodfire's "Neural Networks Are Already Clean" (2026):
+
+- **Task 5 gains a tenth label, `:can_end`**: true when the sentence would
+  be complete if it ended after this word, from left context only (no
+  clause is still waiting for its verb, and the word finishes a
+  constituent: a noun, a pronoun, an intransitive verb, or a copula's
+  adjective). `interp.neurons` is rerun to see whether neuron 64 becomes
+  clean.
+- **Task 11's report becomes a head to head comparison.** `Scoring` gains
+  `by_label/3`, the best unit for every label. `interp.sae` prints, per
+  label, the best neuron against the best SAE feature, the count of labels
+  where each side wins by at least 0.05 F1, and the splicing cost.
+
 ### Task 11: Sparse autoencoder
 
 **Files:**

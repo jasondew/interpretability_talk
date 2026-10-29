@@ -33,11 +33,16 @@ Target about 40 minutes of talking, the rest for questions.
 
 1. **Cold open.** The familiar sentence. "You saw this model get it right.
    Where does it keep the answer?"
-2. **Open a neuron.** Show an MLP neuron's top activating tokens. It fires
-   on several unrelated grammar concepts. It is a mess.
-3. **Superposition.** Why it is a mess, shown live on the toy model from
-   "Toy Models of Superposition": change feature sparsity and watch
-   features start sharing dimensions.
+2. **Open a neuron.** Show an MLP neuron's top activating tokens and its
+   precision and recall against the labels. Measured on this model: none
+   of the 128 neurons is monosemantic at 0.9.
+3. **Two camps.** Why does a neuron look messy? Anthropic's answer is
+   superposition, shown live on the toy model from "Toy Models of
+   Superposition": change feature sparsity and watch features start
+   sharing dimensions. Goodfire's 2026 answer ("Neural Networks Are
+   Already Clean", Cammarata) is that most neurons already have one job,
+   and messiness usually means a weak rubric or a missing label. This
+   model can test both, because we know the answer.
 4. **The SAE.** Train a sparse autoencoder on the activations. One concept
    slide on what it is (a wider layer that must reconstruct the
    activations while using as few units as possible at once).
@@ -176,8 +181,16 @@ as they are). Requirements:
   as monosemantic for a label above a threshold the builder sets and
   states (0.9 on both is a reasonable start).
 - At least one experiment whose result the speaker does not know
-  beforehand. The suggested one: train SAEs of two or more widths and see
-  whether a feature such as "plural subject" splits into finer features.
+  beforehand. The main one is a head to head comparison: for every grammar
+  label, the best neuron against the best SAE feature, with the cost of
+  splicing the SAE in. Either outcome is a talk: the SAE untangled the
+  neurons, or the neurons were about as clean as the features, as
+  Goodfire argues. A second, smaller test of the same argument: the
+  neuron analysis found a neuron firing on the last word of a finished
+  sentence, a concept missing from the labels, so the labels gain "the
+  sentence could end here" and the neurons are scored again. Training
+  SAEs of two or more widths to watch features split stays as an
+  optional extra.
 
 ### Steering
 
@@ -234,6 +247,9 @@ These are requirements, not extras, because of the anti goal above.
   - How do we know a feature belongs to the model and is not an invention
     of the SAE?
   - Does this work on real models?
+  - Isn't superposition contested? (Goodfire, "Neural Networks Are
+    Already Clean", 2026.) Answer with this model's own head to head
+    numbers.
 - Every module's `@moduledoc` explains the concept, as in the first repo,
   so the code is reading material for the speaker.
 
@@ -296,7 +312,7 @@ These are requirements, not extras, because of the anti goal above.
 - **Five weeks.** From October 28 to December 1, around a day job.
   Interpretability work has no natural end. Order of cuts if time runs
   short: the optional before and after beat, then the SAE width
-  experiment, then the browser explorer (the deck alone still tells the
+  experiment (the head to head comparison stays), then the browser explorer (the deck alone still tells the
   story), and never the scored features or steering. Suggested
   checkpoints: toy model and extended grammar by November 6; trained model
   with polysemantic neurons and a first SAE by November 13; scoring and
