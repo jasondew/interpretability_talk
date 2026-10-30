@@ -49,10 +49,16 @@ Target about 40 minutes of talking, the rest for questions.
 5. **Clean features, scored.** Click a feature, see every token it fires
    on, and see its precision and recall against the grammar's own labels.
    Monosemanticity becomes a measurement.
-6. **Steering.** Turn up the "plural subject" feature and watch the model
-   write `flee` after `the llama`. This calls back to the first talk's
-   central sentence. Speaker's guess at the closer; treat it as the
-   strongest candidate, not a commitment.
+6. **Steering.** Push a "plural subject" direction and watch the model
+   write `flee` after `the llama who chases the dogs`, calling back to
+   the first talk's central sentence. Decided 2026-10-30 after measuring
+   five directions (tiny_llm `docs/findings.md`): the live flip uses
+   **neuron 74**, with the twist on screen. The neuron we called messy
+   (precision 0.78) is the cleanest knob, flipping every probe for 0.09
+   nats of damage, while the SAE's most precise feature (0.99) is the
+   worst single knob (2.65 nats). Detecting a concept and controlling it
+   are different tests. The talk is about how interpretability is done,
+   so this surprise is the beat, not something to smooth over.
 7. **Close.** What this does and does not tell us about real models.
 
 An optional beat, if the measurements support it: run the same neuron
