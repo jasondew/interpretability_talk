@@ -33,21 +33,32 @@ Target about 40 minutes of talking, the rest for questions.
 
 1. **Cold open.** The familiar sentence. "You saw this model get it right.
    Where does it keep the answer?"
-2. **Open a neuron.** Show an MLP neuron's top activating tokens. It fires
-   on several unrelated grammar concepts. It is a mess.
-3. **Superposition.** Why it is a mess, shown live on the toy model from
-   "Toy Models of Superposition": change feature sparsity and watch
-   features start sharing dimensions.
+2. **Open a neuron.** Show an MLP neuron's top activating tokens and its
+   precision and recall against the labels. Measured on this model: none
+   of the 128 neurons is monosemantic at 0.9.
+3. **Two camps.** Why does a neuron look messy? Anthropic's answer is
+   superposition, shown live on the toy model from "Toy Models of
+   Superposition": change feature sparsity and watch features start
+   sharing dimensions. Goodfire's 2026 answer ("Neural Networks Are
+   Already Clean", Cammarata) is that most neurons already have one job,
+   and messiness usually means a weak rubric or a missing label. This
+   model can test both, because we know the answer.
 4. **The SAE.** Train a sparse autoencoder on the activations. One concept
    slide on what it is (a wider layer that must reconstruct the
    activations while using as few units as possible at once).
 5. **Clean features, scored.** Click a feature, see every token it fires
    on, and see its precision and recall against the grammar's own labels.
    Monosemanticity becomes a measurement.
-6. **Steering.** Turn up the "plural subject" feature and watch the model
-   write `flee` after `the llama`. This calls back to the first talk's
-   central sentence. Speaker's guess at the closer; treat it as the
-   strongest candidate, not a commitment.
+6. **Steering.** Push a "plural subject" direction and watch the model
+   write `flee` after `the llama who chases the dogs`, calling back to
+   the first talk's central sentence. Decided 2026-10-30 after measuring
+   five directions (tiny_llm `docs/findings.md`): the live flip uses
+   **neuron 74**, with the twist on screen. The neuron we called messy
+   (precision 0.78) is the cleanest knob, flipping every probe for 0.09
+   nats of damage, while the SAE's most precise feature (0.99) is the
+   worst single knob (2.65 nats). Detecting a concept and controlling it
+   are different tests. The talk is about how interpretability is done,
+   so this surprise is the beat, not something to smooth over.
 7. **Close.** What this does and does not tell us about real models.
 
 An optional beat, if the measurements support it: run the same neuron
@@ -60,13 +71,13 @@ for. Only include it if the data actually shows the contrast.
 ## Goals
 
 - A model, trained on an extended grammar, whose raw MLP neurons are
-  visibly polysemantic.
+  examined honestly (visibly polysemantic, if that is what they are).
 - An SAE whose features match grammar concepts, with precision and recall
   computed against ground truth labels.
 - A steering demo that measurably changes agreement behavior.
-- A browser explorer (WASM preferred, JS acceptable) where the audience
-  can click features and see what they fire on, ideally on their own
-  phones during the talk.
+- A browser explorer (plain JS) where the audience can click features and
+  see what they fire on, ideally on their own phones during the talk.
+  Running it on Popcorn is a stretch goal.
 - A LiveView deck, `interpretability_talk`, built the same way as
   `tiny_llm_talk`: every number on a slide comes from the model, not a
   screenshot.
@@ -94,8 +105,6 @@ Things that would make this a failure even if it technically works:
 - A "monosemantic" claim the audience could poke a hole in, e.g. features
   that only look clean because of cherry picked examples.
 - Any change to the first talk's code, numbers, or claims.
-- The browser explorer eating the schedule. It is the first thing cut if
-  SAE results take longer than expected.
 
 ## Constraints
 
@@ -128,8 +137,9 @@ Things that would make this a failure even if it technically works:
   staying in it is not an easy win.
 - Every number destined for a slide reproduces from a seed, as in the
   first talk.
-- macOS laptop CPU. Training the model and the SAE should each finish in a
-  few minutes at most, so they can be rerun freely while tuning.
+- macOS laptop (MacBook Pro M1 Max) CPU or GPU. Training the model and the
+  SAE should each finish in a couple minutes at most, so they can be rerun
+  freely while tuning.
 
 ### Extended grammar
 
@@ -153,10 +163,12 @@ as they are). Requirements:
 
 - Same family as the first talk: decoder only, one attention head is fine,
   one block, learned positional embeddings, RMSNorm, MLP.
-- The residual stream is small enough relative to the number of concepts
-  that raw MLP neurons come out polysemantic. Tune the grammar size and
-  `d_model` (16 is a reasonable first try) until they do. "Neuron" in the
-  talk means an MLP hidden unit.
+- `d_model` and the MLP width stay at the first talk's values (MLP width
+  is four times `d_model`, as in `TinyLlm.Block`). The model is not
+  shrunk to manufacture superposition. The pressure, if any, comes from
+  the extended grammar having more concepts (word identities included)
+  than the MLP has neurons. Whatever the neurons turn out to be is the
+  result the talk reports. "Neuron" in the talk means an MLP hidden unit.
 - It must still get agreement across a distractor well enough that the
   cold open is honest. Report the same style of probe accuracy table as
   the first talk.
@@ -175,8 +187,16 @@ as they are). Requirements:
   as monosemantic for a label above a threshold the builder sets and
   states (0.9 on both is a reasonable start).
 - At least one experiment whose result the speaker does not know
-  beforehand. The suggested one: train SAEs of two or more widths and see
-  whether a feature such as "plural subject" splits into finer features.
+  beforehand. The main one is a head to head comparison: for every grammar
+  label, the best neuron against the best SAE feature, with the cost of
+  splicing the SAE in. Either outcome is a talk: the SAE untangled the
+  neurons, or the neurons were about as clean as the features, as
+  Goodfire argues. A second, smaller test of the same argument: the
+  neuron analysis found a neuron firing on the last word of a finished
+  sentence, a concept missing from the labels, so the labels gain "the
+  sentence could end here" and the neurons are scored again. Training
+  SAEs of two or more widths to watch features split stays as an
+  optional extra.
 
 ### Steering
 
@@ -192,31 +212,26 @@ as they are). Requirements:
   for a sentence the viewer types or picks, which SAE features fire on
   each token, with each feature's grammar label and score. Steering in
   the browser is a nice to have.
-- **The route is Popcorn** (Software Mansion's Elixir in the browser,
-  which runs AtomVM compiled to WASM; v1.0.0 on hexdocs at the time of
-  writing). The speaker asked for it, and it is the payoff for this
-  audience: Elixir running the model on their phones.
-  - Nx does not run on AtomVM, so the browser forward pass is plain Elixir
-    over lists of floats, in the style of the first talk's
-    `TinyLlm.Tensor`. That is a deliberate callback: the hand written
-    math from the first talk comes back as the thing that runs in the
-    browser. Reuse `TinyLlm.Tensor` directly if AtomVM's standard library
-    supports what it calls; otherwise write a small copy in the nested
-    project.
-  - A test must check that the plain Elixir forward pass matches the Nx
-    forward pass on the same weights, to a stated tolerance, so the
-    browser shows the same model the slides describe.
-  - Popcorn runs in a sandboxed iframe with a JS bridge; the page's
-    drawing (token highlights, feature lists) can be plain JS or HTML fed
-    by that bridge.
-  - Known costs, from Software Mansion's own write up: a bundle over 3MB
-    once the Erlang and Elixir libraries are included, a subset of the
-    standard library, and "not for production" maturity. Fine for a talk
-    demo; plan around them.
-- Time box the Popcorn attempt to about two days. If it is not working by
-  then, the fallback is plain JS reading the same exported weights. ONNX
-  Runtime Web or a Rust/Zig WASM build are not worth trying in between on
-  this schedule.
+- **The baseline is plain JS** reading the exported weights. A test must
+  check that the JS forward pass matches the Nx forward pass on the same
+  weights, to a stated tolerance, so the browser shows the same model the
+  slides describe.
+- **Popcorn is a stretch goal**, attempted only after the baseline works.
+  It is the payoff the speaker wants for this audience: Elixir running
+  the model on their phones.
+  - Popcorn 1.0 moved from AtomVM to the real OTP BEAM compiled to WASM,
+    running in a Web Worker. Costs from Software Mansion's write up: about
+    730KB for the VM plus about 2.5MB of standard library `.beam` files,
+    boot around 200ms. Most of the standard library is now present.
+  - Because it is the real BEAM, `Nx.BinaryBackend` (pure Elixir) may run
+    unchanged, which would let the browser run the same forward pass code
+    as the slides. If it does not, the fallback inside the stretch goal is
+    a plain Elixir forward pass over lists of floats, in the style of the
+    first talk's `TinyLlm.Tensor`, with the same parity test.
+  - The page's drawing (token highlights, feature lists) stays JS, fed by
+    Popcorn's JS bridge, so the stretch goal swaps only the forward pass.
+- Time box the Popcorn attempt to about two days. ONNX Runtime Web or a
+  Rust/Zig WASM build are not worth trying on this schedule.
 - Weights and SAE dictionaries are exported from the Elixir side to a
   simple format the page loads.
 - The deck either embeds the explorer or links it with a QR code. My
@@ -231,14 +246,16 @@ These are requirements, not extras, because of the anti goal above.
   to explain it.
 - A `docs/hard-questions.md` (in the nested project) with honest answers,
   updated as results come in. It must cover at least:
-  - Why an SAE instead of PCA? (The first talk used PCA.)
   - Aren't you just finding the concepts you put into the grammar? The
     answer to defend: the grammar supplies labels to check against, but
     the model never saw them; it had to discover them.
   - What about dead features, or features that fire on everything?
   - How do we know a feature belongs to the model and is not an invention
     of the SAE?
-  - Does any of this work on real models?
+  - Does this work on real models?
+  - Isn't superposition contested? (Goodfire, "Neural Networks Are
+    Already Clean", 2026.) Answer with this model's own head to head
+    numbers.
 - Every module's `@moduledoc` explains the concept, as in the first repo,
   so the code is reading material for the speaker.
 
@@ -263,9 +280,8 @@ These are requirements, not extras, because of the anti goal above.
   deployment pattern (Fly, as `tiny_llm_talk` does), at a public URL, with
   a QR code slide. The code and weights are public, like the first repo.
 - Acceptance includes a phone over mobile data loading it in under about
-  ten seconds and then responding to a click within a second. Popcorn's
-  bundle of a few MB fits that; a bundle that does not counts as the
-  Popcorn attempt failing, and the fallback is JS.
+  ten seconds and then responding to a click within a second. A Popcorn
+  build that misses that bar does not ship; the JS baseline does.
 
 ## Decided
 
@@ -276,7 +292,10 @@ These are requirements, not extras, because of the anti goal above.
 - New code layered inside `tiny_llm` without changing existing code.
 - Deck repo: `interpretability_talk`, LiveView, same pattern as before.
 - Purity is optional; Elixir where it is an easy win.
-- Browser explorer runs on Popcorn; JS is the fallback.
+- Browser explorer is plain JS; Popcorn is a stretch goal.
+- `d_model` is not shrunk. The audience is software engineers, and the
+  talk is about how we go about understanding a model, not about
+  engineering a particular result.
 - Date: Tuesday, December 1, 2026.
 - If features do not come out clean, the talk goes ahead anyway. The
   speaker's words: "the value is in the journey." Lower the threshold and
@@ -288,7 +307,7 @@ These are requirements, not extras, because of the anti goal above.
 ## Left to the builder
 
 - The exact extended grammar and vocabulary.
-- `d_model`, MLP width, SAE width, sparsity method, and thresholds, all
+- SAE width, sparsity method, and thresholds, all
   tuned against the goals above and recorded with the reasons.
 - How to wire Popcorn into the page, within the time box.
 - Deck slide structure, timed against the arc above in the same style as
@@ -299,13 +318,16 @@ These are requirements, not extras, because of the anti goal above.
 - **Five weeks.** From October 28 to December 1, around a day job.
   Interpretability work has no natural end. Order of cuts if time runs
   short: the optional before and after beat, then the SAE width
-  experiment, then the browser explorer (the deck alone still tells the
+  experiment (the head to head comparison stays), then the browser explorer (the deck alone still tells the
   story), and never the scored features or steering. Suggested
   checkpoints: toy model and extended grammar by November 6; trained model
   with polysemantic neurons and a first SAE by November 13; scoring and
   steering by November 20; explorer and deck by November 27, leaving the
   last days for rehearsal.
 - **Neurons might come out clean anyway**, or the SAE might not find clean
-  features. Both are tunable through grammar size and `d_model`. Per the
-  decision above, an imperfect result still ships, honestly framed, but
-  slides are drafted against real measurements, never ahead of them.
+  features. With `d_model` fixed, grammar size is the only lever. If the
+  neurons are clean, that is the finding: section 2 becomes "these
+  neurons are clean, here is why", and the toy model shows what changes
+  when the pressure rises. Per the decision above, an imperfect result
+  still ships, honestly framed, but slides are drafted against real
+  measurements, never ahead of them.
